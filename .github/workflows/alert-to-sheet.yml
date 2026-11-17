@@ -1,0 +1,43 @@
+name: Alert Telegram ke Google Sheet
+
+# Jalan otomatis Senin-Jumat. Jam cron = UTC (WIB - 7 jam).
+on:
+  schedule:
+    - cron: "47 1 * * 1-5"   # 08:47 WIB -> sesi 1, berhenti 12:10 WIB
+    - cron: "17 6 * * 1-5"   # 13:17 WIB -> sesi 2, berhenti 16:15 WIB
+  workflow_dispatch:          # tombol "Run workflow" untuk uji coba
+    inputs:
+      run_until:
+        description: "Berhenti jam berapa (WIB, format JJ:MM)"
+        default: "16:15"
+
+concurrency:
+  group: alert-to-sheet
+  cancel-in-progress: false
+
+jobs:
+  listen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install telethon
+      - name: Tentukan jam berhenti
+        id: until
+        run: |
+          if [ -n "${{ github.event.inputs.run_until }}" ]; then echo "t=${{ github.event.inputs.run_until }}" >> $GITHUB_OUTPUT;
+          elif [ "$(date -u +%H)" -lt 5 ]; then echo "t=12:10" >> $GITHUB_OUTPUT;
+          else echo "t=16:15" >> $GITHUB_OUTPUT; fi
+      - name: Dengarkan alert DataSaham
+        env:
+          API_ID: ${{ secrets.API_ID }}
+          API_HASH: ${{ secrets.API_HASH }}
+          SESSION_STRING: ${{ secrets.SESSION_STRING }}
+          SHEET_WEBHOOK_URL: ${{ secrets.SHEET_WEBHOOK_URL }}
+          SHEET_SECRET: ${{ secrets.SHEET_SECRET }}
+          ALLOWED_BOTS: DataSaham0Bot,DataSahamBot
+          RUN_UNTIL: ${{ steps.until.outputs.t }}
+        run: python alert_to_sheet.py
