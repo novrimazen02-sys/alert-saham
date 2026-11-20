@@ -1,0 +1,29 @@
+name: Data Indodax untuk Bot
+
+# Dinyalakan oleh bot Asisten Trading (tidak ada jadwal sendiri, supaya hemat menit).
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: indodax-data
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ambil:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ambil semua koin Indodax
+        run: python3 indodax_to_artifact.py
+
+      - name: Simpan untuk bot
+        uses: actions/upload-artifact@v4
+        with:
+          name: indodax-data
+          path: data/indodax.json
+          retention-days: 1
