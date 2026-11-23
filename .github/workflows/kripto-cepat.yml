@@ -1,0 +1,29 @@
+name: Kripto Cepat (1 jam & 15 menit)
+
+# Dinyalakan oleh bot Asisten Trading tiap ±15 menit (repo publik = menit GitHub gratis).
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: kripto-cepat
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ambil:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ambil candle 1 jam & 15 menit
+        run: python3 kripto_cepat.py
+
+      - name: Simpan untuk bot
+        uses: actions/upload-artifact@v4
+        with:
+          name: kripto-cepat
+          path: data/cepat.json
+          retention-days: 1
