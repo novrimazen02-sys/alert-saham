@@ -1,0 +1,29 @@
+name: Meme Data (Solana)
+
+# Dinyalakan oleh bot Asisten Trading (akun 2) tiap ±5 menit. Repo publik = menit GitHub gratis.
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: meme-data
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ambil:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ambil data meme koin
+        run: python3 meme_data.py
+
+      - name: Simpan untuk bot
+        uses: actions/upload-artifact@v4
+        with:
+          name: meme-data
+          path: data/meme.json
+          retention-days: 1
